@@ -1,0 +1,32 @@
+nodeType* buildListBackward()
+{
+    // khởi tạo giá trị của các con trỏ là nullptr
+    nodeType *first, *newNode, *last;
+    int num;
+    // nhập giá trị cho danh sách liên kết
+    // kết thúc việc nhập bằng việc nhập -999
+    cout << "Enter a list of integers ending with -999."
+         << endl;
+    cin >> num;
+    first = nullptr;
+    while (num != -999)
+    {
+        // cấp phát bộ nhớ cho nodeType và lưu trữ 
+        // địa chỉ của bộ nhớ được cấp phát trong newNode
+        newNode = new nodeType;
+
+        // sao chép giá trị của biến num 
+        // vào biến info trong newNode
+        newNode->info = num;
+
+        // đưa newNode vào vị trí đầu tiên của danh sách
+        newNode->link = first;
+
+        // biến first trỏ đến vị trí đầu tiên của danh sách
+        first = newNode;
+        
+        // đọc vào giá trị tiếp theo
+        cin >> num;
+    } // kết thúc vòng while
+    return first;
+} // kết thúc hàm buildListForward

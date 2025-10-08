@@ -1,0 +1,123 @@
+//#include <bits/stdc++.h>
+#include <iostream>
+#include <stack>
+using namespace std;
+
+struct node
+{
+    int pos;
+    int len;
+};
+
+/**
+ * @brief Kiểm tra ký tự đóng ngoặc hợp lệ
+ *
+ * @param open ký tự mở ngoặc bao gồm '{', '(','['
+ * @param close ký tự đóng ngoặc bao gồm '}', ')', ']'
+ * @return true trả về true nếu hợp lệ
+ * @return false trả về false nếu không hợp lệ
+ */
+bool isLegalClose(char open, char close)
+{
+    return (open == '(' && close == ')') || (open == '[' && close == ']') || (open == '{' && close == '}');
+}
+
+
+/**
+ * @brief Tìm kiếm chuỗi ngoặc hợp lệ dài nhất
+ *
+ * @param s Chuối ban đầu cần tìm
+ * @return node Trả về vị trí bắt đầu và độ dài chuỗi tìm thấy
+ */
+node findSubString(string s)
+{
+    //Tạo node lưu lại vị trí chuỗi con
+    node subString;
+    subString.pos = -1;
+    subString.len = 0;
+
+    stack<int> S;   //ngăn xếp chứa các ký tự trong chuỗi gốc
+    int i = 0;  //index khởi động
+    //Duyệt qua toàn bộ chuỗi
+    while (i < s.length())
+    {
+        //Kiểm tra ngăn xếp rỗng. Nếu rỗng thì đẩy ký tự hiện tại vào ngắn xếp
+        if (S.empty())
+            S.push(i);
+        else
+        {
+            //Kiểm tra dấu đóng ngoặc có hợp lệ hay không
+            if (isLegalClose(s[S.top()], s[i]))
+            {
+                //Nếu hợp lệ thì loại bỏ ký tự trên đầu ngăn xếp
+                S.pop();
+            }
+            else
+            {
+                //Nếu không hợp lệ thì đẩy vị trí của ký tự hiện tại vào ngăn xếp
+                S.push(i);
+            }
+        }
+        i++;
+    }
+    //Đẩy vị trí kế thúc vào ngăn xếp
+    S.push(i);
+    //Nếu ngăn xếp rỗng toàn bộ chuỗi gốc đều hợp lệ
+    if(S.empty())
+    {
+        subString.pos = 0;
+        subString.len = s.length();
+    }
+    else
+    {
+        //Ngăn xếp không rỗng tiến hành kiểm tra
+        int begin = -1;  //Đáy ngăn xếp
+        int cur = S.top();  //Đỉnh ngăn xếp hiện tại
+        //Duyệt đến khi ngăn xếp rỗng
+        while(!S.empty())
+        {
+            S.pop();    //lấy ra đỉnh hiện tại
+            int prev;   //Đỉnh tiếp theo của ngăn xếp
+            if(!S.empty())
+            {
+                prev = S.top();
+            }
+            else
+            {
+                prev = begin;
+            }
+            int len = cur - prev - 1;   //Độ dài chuỗi bằng khoảng cách 2 đỉnh liên tiếp
+            if (len > subString.len)    //So sánh độ dài chuỗi vừa tiếp được với chuỗi dài nhất
+            {
+                subString.len = len;
+                subString.pos = prev+1;
+            }
+            cur = prev; //cập nhật lại đỉnh hiện tại
+        }
+    }
+    return subString;
+}
+
+int main()
+{
+    string src = "{}{}[[]";
+    node maxSubString;
+    maxSubString.pos = -1;
+    maxSubString.len = 0;
+
+    maxSubString = findSubString(src);
+
+    cout << "Chuỗi ngoặc ban đầu là: " << src << endl;
+    if(maxSubString.len == 0)
+    {
+        cout << "Không tìm thấy chuỗi ngoặc hợp lệ" <<endl;
+    }
+    else
+    {
+        cout << "Chuỗi ngoặc dài nhất bắt đầu tại: " << maxSubString.pos << endl
+             << "Chuỗi có độ dài là: " << maxSubString.len << endl
+             << "Giá trị chuỗi là: " << src.substr(maxSubString.pos,maxSubString.len) << endl;
+    }
+
+    return 0;
+}
