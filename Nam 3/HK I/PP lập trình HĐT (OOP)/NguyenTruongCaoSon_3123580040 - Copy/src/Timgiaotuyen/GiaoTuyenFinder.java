@@ -5,7 +5,7 @@ public class GiaoTuyenFinder {
     private static final double EPSILON = 1e-9; 
 
     public static DuongThang timGiaoTuyen(MatPhang p1, MatPhang p2) {
-        // Sử dụng Getters: p1.getA(), p1.getB(), v.v.
+        // He so mat phang
         double A1 = p1.getA(), B1 = p1.getB(), C1 = p1.getC(), D1 = p1.getD();
         double A2 = p2.getA(), B2 = p2.getB(), C2 = p2.getC(), D2 = p2.getD();
 
@@ -44,7 +44,6 @@ public class GiaoTuyenFinder {
 
     private static Diem timDiemChung(double A1, double B1, double C1, double D1, 
                               double A2, double B2, double C2, double D2) {
-        // ... (Logic giải hệ phương trình giữ nguyên, sử dụng A1, B1,... đã lấy qua Getters)
         
         // Thử z = 0 (tim x, y)
         double detXY = A1 * B2 - A2 * B1;

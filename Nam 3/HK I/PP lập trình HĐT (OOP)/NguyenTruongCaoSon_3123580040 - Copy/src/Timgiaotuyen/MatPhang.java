@@ -5,7 +5,6 @@ public class MatPhang extends DoiTuong {
         this.a=a; this.b=b; this.c=c; this.d=d;
     }
     
-    // Getters
     public double getA() { return a; }
     public double getB() { return b; }
     public double getC() { return c; }

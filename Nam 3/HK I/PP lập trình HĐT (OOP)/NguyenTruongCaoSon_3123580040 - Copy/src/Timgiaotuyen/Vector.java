@@ -5,7 +5,6 @@ public class Vector extends DoiTuong {
         this.x = x; this.y = y; this.z = z;
     }
     
-    // Getters
     public double getX() { return x; }
     public double getY() { return y; }
     public double getZ() { return z; }

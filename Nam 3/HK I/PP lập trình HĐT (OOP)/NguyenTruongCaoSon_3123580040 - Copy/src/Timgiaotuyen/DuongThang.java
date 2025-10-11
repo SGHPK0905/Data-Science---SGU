@@ -6,7 +6,6 @@ public class DuongThang extends DoiTuong {
     }
     
     public void hienThi() {
-        // Sử dụng Getters thay vì truy cập trực tiếp
         System.out.println("Giao tuyen di qua A" + A + " va co VTCP: (" + u.getX() + ", " + u.getY() + ", " + u.getZ() + ")");
     }
 }
