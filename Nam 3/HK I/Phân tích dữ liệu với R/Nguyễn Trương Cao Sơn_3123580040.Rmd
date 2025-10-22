@@ -1,0 +1,189 @@
+---
+title: "BẰNG PHƯƠNG PHÁP KIỂM ĐỊNH NHỊ THỨC Phân tích: Mối liên hệ giữa Game Bạo lực và Hành vi bạo lực"
+author: "Nguyễn Trương Cao Sơn"
+date: "2025-10-15"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: united
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  comment = "##",
+  fig.align = "center",
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center"
+)
+# Tải các thư viện cần thiết cho phân tích
+# install.packages(c("tidyverse", "knitr"))
+library(tidyverse)
+library(knitr)
+```
+
+# Tổng quan lý thuyết: Kiểm định Nhị thức (Binomial Test)
+
+## Giới thiệu
+
+**Kiểm định Nhị thức** là một phương pháp kiểm định giả thuyết thống kê chính xác (exact test) được sử dụng để xác định xem liệu tỉ lệ của một sự kiện "thành công" trong một chuỗi các thử nghiệm độc lập có khác biệt so với một tỉ lệ giả định hay không. Đây là công cụ lý tưởng cho các tình huống mà kết quả của mỗi thử nghiệm chỉ có thể là một trong hai loại (ví dụ: có/không, đúng/sai, sống/chết).
+
+## Các giả định
+
+Để áp dụng Kiểm định Nhị thức, dữ liệu cần tuân thủ các điều kiện sau:
+
+* **Số lần thử nghiệm cố định:** Tổng số quan sát (`n`) phải được xác định trước.
+* **Thử nghiệm độc lập:** Kết quả của một thử nghiệm không ảnh hưởng đến kết quả của các thử nghiệm khác.
+* **Hai kết quả duy nhất:** Mỗi thử nghiệm phải được phân loại là "thành công" hoặc "thất bại".
+* **Xác suất không đổi:** Xác suất thành công (`p`) là như nhau cho mỗi thử nghiệm.
+
+## Quy trình kiểm định giả thuyết
+
+Quy trình kiểm định giả thuyết về tỉ lệ sử dụng Kiểm định Nhị thức bao gồm bốn bước chính:
+
+### 1. Thiết lập giả thuyết
+
+Ta cần xác định hai giả thuyết đối lập nhau:
+
+* **Giả thuyết gốc ($H_0$)**: Đây là giả thuyết mặc định, cho rằng không có gì đặc biệt xảy ra. Tỉ lệ của tổng thể (`p`) bằng một giá trị cụ thể ($p_0$).
+* **Giả thuyết đối ($H_a$)**: Giả thuyết này đi ngược lại $H_0$. Tùy thuộc vào câu hỏi nghiên cứu, nó có thể là:
+    * **Hai phía**: $p \neq p_0$ (tỉ lệ khác $p_0$)
+    * **Một phía (phải)**: $p > p_0$ (tỉ lệ lớn hơn $p_0$)
+    * **Một phía (trái)**: $p < p_0$ (tỉ lệ nhỏ hơn $p_0$)
+
+### 2. Chọn mức ý nghĩa
+
+**Mức ý nghĩa**, ký hiệu là $\alpha$, là ngưỡng xác suất để bác bỏ giả thuyết gốc. Nếu xác suất xảy ra của kết quả quan sát được (khi $H_0$ đúng) thấp hơn $\alpha$, chúng ta sẽ bác bỏ $H_0$. Mức $\alpha$ phổ biến nhất là **0.05 (5%)**.
+
+### 3. Tính toán giá trị kiểm định
+
+Phần mềm thống kê (như R) sẽ tính toán **P-value** dựa trên phân phối nhị thức.
+
+> **P-value là gì?** 🧐 P-value là xác suất quan sát được một kết quả trong mẫu ít nhất cũng cực đoan như kết quả đã thu được, với giả định rằng giả thuyết gốc ($H_0$) là đúng. P-value càng nhỏ, bằng chứng chống lại $H_0$ càng mạnh.
+
+### 4. Đưa ra kết luận
+
+Dựa trên P-value, ta đưa ra quyết định:
+
+* Nếu **P-value < $\alpha$**: Ta có đủ bằng chứng thống kê để **bác bỏ giả thuyết gốc $H_0$**.
+* Nếu **P-value $\geq$ $\alpha$**: Ta **không có đủ bằng chứng** để bác bỏ giả thuyết gốc $H_0$.
+
+---
+
+# Nghiên cứu tình huống: Tác động của Game Bạo lực
+
+## Bối cảnh và câu hỏi nghiên cứu
+
+Một trong những chủ đề gây tranh cãi nhất trong tâm lý học hiện đại là liệu việc tiếp xúc với game bạo lực có làm gia tăng hành vi hung hăng ngoài đời thực hay không. Nghiên cứu này nhằm mục đích sử dụng dữ liệu khảo sát thực tế để kiểm tra một khía cạnh của mối liên hệ này.
+
+* **Giả định nền:** Dựa trên các nghiên cứu tâm lý xã hội trước đây, tỉ lệ người trẻ trong dân số chung thừa nhận rằng họ **"thỉnh thoảng không thể kiểm soát được cảm giác muốn đánh người khác"** được ước tính là khoảng **20%**.
+* **Câu hỏi nghiên cứu:** Liệu những người có chơi game bạo lực có tỉ lệ thừa nhận suy nghĩ hung hăng này cao hơn mức nền 20% hay không?
+
+## Dữ liệu sử dụng
+
+Chúng ta sẽ sử dụng bộ dữ liệu công khai trên Kaggle:
+
+* **Tên bộ dữ liệu:** [Effects of Video Games on Aggression](https://www.kaggle.com/datasets/muhammadshamoeel/effects-of-video-games-on-aggression-msdos-csv)
+* **Mô tả:** Dữ liệu được thu thập từ một cuộc khảo sát sinh viên, bao gồm các câu hỏi về thói quen chơi game và các chỉ số về hành vi, suy nghĩ.
+
+## Thiết lập giả thuyết cho nghiên cứu
+
+* **Giả thuyết gốc ($H_0$)**: $p \leq 0.20$
+    * *Diễn giải*: Tỉ lệ người chơi game bạo lực có suy nghĩ hung hăng **không cao hơn** mức 20% của dân số chung.
+* **Giả thuyết đối ($H_a$)**: $p > 0.20$
+    * *Diễn giải*: Tỉ lệ người chơi game bạo lực có suy nghĩ hung hăng **cao hơn** mức 20% của dân số chung.
+* **Mức ý nghĩa**: $\alpha = 0.05$.
+
+---
+
+# Phân tích trên R
+
+## Bước 1: Tải và làm sạch dữ liệu
+
+Đầu tiên, chúng ta tải dữ liệu và thực hiện một số bước làm sạch cơ bản như đổi tên cột cho dễ thao tác.
+
+```{r data_preparation}
+# Đọc dữ liệu từ file CSV đã tải về
+# Đảm bảo file "aggression_data.csv" nằm trong cùng thư mục làm việc của bạn
+data <- read_csv("aggression_data.csv")
+
+# Đổi tên cột để dễ hiểu và dễ gọi hơn
+colnames(data) <- c("id", "gender", "age", "play_violent_games", "feeling_to_hit", "gets_angry", "argues_more", "gets_in_fights")
+
+# Hiển thị 6 dòng đầu của dữ liệu sau khi đã làm sạch
+knitr::kable(head(data), caption = "Một vài dòng đầu của bộ dữ liệu")
+```
+
+## Bước 2: Trích xuất dữ liệu cần thiết
+
+Chúng ta cần lọc ra nhóm đối tượng quan tâm (người chơi game bạo lực) và đếm số trường hợp "thành công" (người có suy nghĩ hung hăng).
+
+```{r data_extraction}
+# Lọc ra những người có chơi game bạo lực (thời gian chơi > 0 giờ)
+violent_gamers <- data %>%
+  filter(play_violent_games > 0)
+
+# Xác định biến kết quả nhị phân: 1 nếu có suy nghĩ hung hăng, 0 nếu không
+# "Agree" (giá trị 4) hoặc "Strongly agree" (giá trị 5) được coi là có suy nghĩ hung hăng
+violent_gamers <- violent_gamers %>%
+  mutate(has_aggressive_thoughts = ifelse(feeling_to_hit %in% c(4, 5), 1, 0))
+  
+# Tính toán các giá trị cần cho kiểm định
+n <- nrow(violent_gamers)  # Tổng cỡ mẫu
+x <- sum(violent_gamers$has_aggressive_thoughts) # Số trường hợp "thành công"
+sample_proportion <- x / n # Tỉ lệ trong mẫu
+
+# In kết quả chuẩn bị
+cat("Tổng số người chơi game bạo lực trong mẫu (n):", n, "\n")
+cat("Số người thừa nhận có suy nghĩ hung hăng (x):", x, "\n")
+cat("Tỉ lệ quan sát được trong mẫu:", scales::percent(sample_proportion), "\n")
+```
+Tỉ lệ quan sát được trong mẫu là `r scales::percent(sample_proportion)`, cao hơn mức nền 20%. Câu hỏi đặt ra là liệu sự khác biệt này có ý nghĩa thống kê hay chỉ là do ngẫu nhiên.
+
+## Bước 3: Thực hiện Kiểm định Nhị thức
+
+Chúng ta sử dụng hàm `binom.test()` để thực hiện kiểm định giả thuyết một phía.
+
+```{r binomial_test_execution}
+# Tỉ lệ giả định trong giả thuyết gốc
+p0 <- 0.20
+
+# Thực hiện kiểm định
+ket_qua <- binom.test(x = x,
+                      n = n,
+                      p = p0,
+                      alternative = "greater")
+
+# In kết quả một cách trực quan
+print(ket_qua)
+```
+
+---
+
+# Diễn giải kết quả và Kết luận
+
+## Diễn giải Output từ R
+
+Kết quả từ hàm `binom.test()` cung cấp các thông tin quan trọng sau:
+
+* **`p-value`**: Giá trị P-value thu được là `r round(ket_qua$p.value, 4)`.
+* **`sample estimates`**: Tỉ lệ thành công trong mẫu (probability of success) là `r round(ket_qua$estimate, 4)`.
+* **`95 percent confidence interval`**: Khoảng tin cậy 95% cho tỉ lệ thực sự của tổng thể.
+
+## Đưa ra quyết định
+
+Chúng ta so sánh P-value với mức ý nghĩa $\alpha = 0.05$.
+
+* **P-value** = `r round(ket_qua$p.value, 4)`
+* **Mức ý nghĩa $\alpha$** = `0.05`
+
+Vì **`r round(ket_qua$p.value, 4)` < 0.05**, chúng ta có đủ bằng chứng thống kê để **bác bỏ giả thuyết gốc $H_0$**.
+
+## Kết luận cuối cùng
+
+Dựa trên phân tích bộ dữ liệu khảo sát, có bằng chứng thống kê đủ mạnh ở mức ý nghĩa 5% để kết luận rằng **tỉ lệ những người chơi game bạo lực thừa nhận có suy nghĩ muốn tấn công người khác (`r scales::percent(sample_proportion)`) thực sự cao hơn mức nền 20% trong dân số chung.**
+
+Kết quả này không khẳng định rằng game bạo lực *gây ra* hành vi hung hăng, nhưng nó cho thấy một mối liên hệ có ý nghĩa thống kê giữa hai yếu tố này trong bộ dữ liệu được phân tích.

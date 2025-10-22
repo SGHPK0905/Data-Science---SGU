@@ -1,0 +1,291 @@
+---
+title: "Phân tích Mối liên hệ giữa Game với hành vi Bạo lực: Ứng dụng Kiểm định Nhị thức"
+author: "Nguyễn Trương Cao Sơn"
+date: "Cập nhật: `r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: false
+    theme: united
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  comment = "##",
+  fig.align = "center"
+)
+# Tải các thư viện cần thiết
+library(tidyverse)
+library(knitr)
+library(scales)
+```
+
+# 1. Tổng quan lý thuyết: Kiểm định Nhị thức (Binomial Test)
+
+## 1.1. Giới thiệu
+
+**Kiểm định Nhị thức** là một phương pháp kiểm định giả thuyết thống kê chính xác (exact test). Phương pháp này được sử dụng để xác định xem liệu tỉ lệ của một sự kiện "thành công" (ví dụ: tỉ lệ trả lời "Có") trong một chuỗi các thử nghiệm Bernoulli độc lập có khác biệt so với một tỉ lệ giả định hay không. Nó tính toán xác suất trực tiếp từ phân phối Nhị thức, đảm bảo tính hợp lệ ngay cả với các trường hợp có kích thước mẫu nhỏ.
+
+
+## 1.2. Tổng quan về dữ liệu
+Bộ dữ liệu này có tên **"Effects of Video Games on Aggression"** (Tác động của Trò chơi điện tử đến sự Hung hăng), được thu thập bởi Muhammad Shamoeel Ul Naeem.
+
+* **Nguồn:** [Kaggle Dataset Link](https://www.kaggle.com/datasets/muhammadshamoeel/effects-of-video-games-on-aggression-msdos-csv)
+* **Mục tiêu:** Dữ liệu được thu thập từ một cuộc khảo sát sinh viên nhằm tìm hiểu họ dành bao nhiêu thời gian chơi game (đặc biệt là game bạo lực) và liệu điều này có ảnh hưởng đến hành vi của họ hay không.
+* **Cấu trúc:** Bộ dữ liệu gốc bao gồm 43 cột, chứa các thông tin:
+    * **Nhân khẩu học:** Tuổi, Giới tính, Lớp học, Thành phố...
+    * **Thói quen chơi game:** Loại game thường chơi, thời gian chơi game chung, thời gian chơi game bạo lực.
+    * **Thang đo hành vi:** Một loạt 29 câu hỏi (từ cột 11 đến 40) được lấy từ **Thang đo Hung hăng Buss-Perry (Buss-Perry Aggression Scale)**, yêu cầu người tham gia đánh giá mức độ đồng ý (từ "Strongly Disagree" đến "Strongly Agree") với các phát biểu về sự nóng nảy, thù địch, và hung hăng thể chất/lời nói.
+    * **Câu hỏi kết luận:** Hai câu hỏi cuối cùng về hành vi phạm pháp và niềm tin về tác động của game.
+
+---
+
+# 2. Nghiên cứu tình huống: Hành vi và Niềm tin
+
+Chúng ta muốn kiểm định giả thuyết về mối liên hệ giữa việc chơi game bạo lực và suy nghĩ hung hăng, dựa trên 2 câu hỏi khảo sát:
+
+**Về Hành vi:** Have you ever been involved in delinquent behaviour? like stealing, breaking things of others (Bạn đã bao giờ tham gia vào hành vi phạm pháp chưa? ví dụ như trộm cắp, phá hoại đồ đạc của người khác)
+
+**Về Niềm tin:** Do you believe that playing violent video games can lead to aggressive behavior in real life? (Bạn có tin rằng việc chơi game bạo lực có thể dẫn đến hành vi hung hăng ngoài đời thực không?)
+
+
+### a. Kiểm định 1: Hành vi Phạm pháp (Delinquent Behaviour)
+* **Tỉ lệ nền ($p_0$): 0.10 (Giả định học thuật)**
+* **Giả thuyết gốc ($H_0$)**: $p \leq 0.10$
+    * *Diễn giải*: Tỉ lệ người chơi game bạo lực có hành vi phạm pháp **không cao hơn** mức 10%.
+* **Giả thuyết đối ($H_a$)**: $p > 0.10$
+    * *Diễn giải*: Tỉ lệ này **cao hơn** mức 10%.
+* **Mức ý nghĩa**: $\alpha = 0.05$.
+
+### b. Kiểm định 2: Niềm tin (Belief)
+* **Tỉ lệ nền ($p_0$): 0.40 (Nguồn: Pew Research Center, 2015)**
+* **Giả thuyết gốc ($H_0$)**: $p = 0.40$
+    * *Diễn giải*: Tỉ lệ người chơi game bạo lực tin rằng game gây bạo lực **bằng** tỉ lệ của dân số chung (40%).
+* **Giả thuyết đối ($H_a$)**: $p \neq 0.40$
+    * *Diễn giải*: Tỉ lệ này **khác biệt** so với 40%.
+* **Mức ý nghĩa**: $\alpha = 0.05$.
+
+---
+
+# 3. Phân tích trên R
+
+## 3.1. Kiểm định 1: Hành vi Phạm pháp (Delinquent Behaviour)
+
+### 3.1.1. Đọc dữ liệu và Tính toán các biến đầu vào
+
+* **Mục tiêu:** Tính toán số lượng người chơi game bạo lực hợp lệ (`n`) và số người trong nhóm đó thừa nhận có hành vi phạm pháp (`x`).
+* **Các cột sử dụng:**
+    * `col_play_time`: "How much time do you play \"violent\" video games specifically?"
+    * `col_behavior`: "Have you ever been involved in delinquent behaviour? like stealing, breaking things of others"
+
+```{r data_prep_behavior, echo=TRUE}
+# Đọc dữ liệu nếu chưa có
+if (!exists("data_raw")) {
+  data_raw <- read_csv("aggression_data.csv")
+  col_play_time <- "How much time do you play \"violent\" video games specifically?"
+  col_behavior <- "Have you ever been involved in delinquent behaviour? like stealing, breaking things of others"
+  col_belief <- "Do you believe that playing violent video games can lead to aggressive behavior in real life?"
+}
+
+# Xử lý dữ liệu riêng cho Kiểm định 1
+data_behavior <- data_raw %>%
+  # Chuẩn hóa cột thời gian chơi game và cột hành vi
+  mutate(
+    play_time_numeric = case_when(
+      str_detect(.data[[col_play_time]], "more than") ~ 1,
+      str_detect(.data[[col_play_time]], "less than 1 hour") ~ 0.5,
+      TRUE ~ 0
+    ),
+    behavior_norm = str_to_lower(.data[[col_behavior]])
+  ) %>%
+  # Lọc ra nhóm người chơi game bạo lực và đã trả lời
+  filter(play_time_numeric > 0 & !is.na(behavior_norm))
+
+# Tính toán n và x cho Kiểm định 1
+n_behavior <- nrow(data_behavior)
+x_behavior <- data_behavior %>%
+  filter(behavior_norm == "yes") %>%
+  nrow()
+
+# In kết quả chuẩn bị
+cat("--- Dữ liệu đầu vào cho Kiểm định 1 (Hành vi) ---\n")
+cat("Tổng số người chơi game bạo lực hợp lệ (n):", n_behavior, "\n")
+cat("Số người thừa nhận có hành vi phạm pháp (x):", x_behavior, "\n")
+```
+
+### 3.1.2. Thực hiện kiểm định
+
+* **Giả thuyết:** $H_0: p \leq 0.10$ vs $H_a: p > 0.10$
+* **Mức nền:** $p_0 = 0.10$
+
+```{r test_behavior, echo=TRUE}
+# Chạy Kiểm định Nhị thức một phía
+test_result_behavior <- binom.test(x = x_behavior,
+                                   n = n_behavior,
+                                   p = 0.10,
+                                   alternative = "greater")
+
+# In kết quả kiểm định
+print(test_result_behavior)
+```
+
+### 3.1.3. Kết luận thống kê (Kiểm định 1)
+
+* P-value = `r format(test_result_behavior$p.value, nsmall=4)`
+* Mức ý nghĩa $\alpha = 0.05$
+* Vì **P-value (`r round(test_result_behavior$p.value, 4)`) < 0.05**, chúng ta **bác bỏ giả thuyết gốc $H_0$**.
+
+**Kết luận (Bước 1 - Thống kê):** Có bằng chứng thống kê đủ mạnh để kết luận rằng tỉ lệ người chơi game bạo lực thừa nhận có hành vi phạm pháp (`r percent(x_behavior / n_behavior, 0.1)`) **cao hơn một cách có ý nghĩa** so với mức nền 10% (giả định).
+
+## 3.2. Kiểm định 2: Niềm tin (Belief)
+
+### 3.2.1. Đọc dữ liệu và Tính toán các biến đầu vào
+
+* **Mục tiêu:** Tính toán số lượng người chơi game bạo lực hợp lệ (`n`) và số người trong nhóm đó tin rằng game gây bạo lực (`x`).
+* **Các cột sử dụng:**
+    * `col_play_time`: "How much time do you play \"violent\" video games specifically?"
+    * `col_belief`: "Do you believe that playing violent video games can lead to aggressive behavior in real life?"
+
+```{r data_prep_belief, echo=TRUE}
+# Xử lý dữ liệu riêng cho Kiểm định 2
+data_belief <- data_raw %>%
+  # Chuẩn hóa cột thời gian chơi game và cột niềm tin
+  mutate(
+    play_time_numeric = case_when(
+      str_detect(.data[[col_play_time]], "more than") ~ 1,
+      str_detect(.data[[col_play_time]], "less than 1 hour") ~ 0.5,
+      TRUE ~ 0
+    ),
+    belief_norm = str_to_lower(.data[[col_belief]])
+  ) %>%
+  # Lọc ra nhóm người chơi game bạo lực và đã trả lời
+  filter(play_time_numeric > 0 & !is.na(belief_norm))
+
+# Tính toán n và x cho Kiểm định 2
+n_belief <- nrow(data_belief)
+x_belief <- data_belief %>%
+  filter(belief_norm == "yes") %>%
+  nrow()
+
+# In kết quả chuẩn bị
+cat("--- Dữ liệu đầu vào cho Kiểm định 2 (Niềm tin) ---\n")
+cat("Tổng số người chơi game bạo lực hợp lệ (n):", n_belief, "\n")
+cat("Số người tin game gây bạo lực (x):", x_belief, "\n")
+```
+
+### 3.2.2. Thực hiện kiểm định
+
+* **Giả thuyết:** $H_0: p = 0.40$ vs $H_a: p \neq 0.40$
+* **Mức nền:** $p_0 = 0.40$ (Nguồn: Pew Research Center, 2015)
+
+```{r test_belief, echo=TRUE}
+# Chạy Kiểm định Nhị thức hai phía
+test_result_belief <- binom.test(x = x_belief,
+                                 n = n_belief,
+                                 p = 0.40,
+                                 alternative = "two.sided")
+
+# In kết quả kiểm định
+print(test_result_belief)
+```
+
+### 3.2.3. Kết luận thống kê (Kiểm định 2)
+
+* P-value = `r round(test_result_belief$p.value, 4)`
+* Mức ý nghĩa $\alpha = 0.05$
+* Vì **P-value (`r round(test_result_belief$p.value, 4)`) < 0.05**, chúng ta **bác bỏ giả thuyết gốc $H_0$**.
+
+**Kết luận (Bước 1 - Thống kê):** Có bằng chứng thống kê rất mạnh mẽ để kết luận rằng tỉ lệ người chơi game bạo lực tin rằng game gây bạo lực (`r percent(x_belief / n_belief, 0.1)`) **khác biệt một cách có ý nghĩa** so với tỉ lệ 40% của dân số chung (theo Pew Research). Cụ thể, tỉ lệ này trong mẫu của chúng ta cao hơn đáng kể.
+
+---
+
+# 4. Tổng hợp và Kết luận
+
+## 4.1. Trực quan hóa Kết quả So sánh
+
+Biểu đồ (Hình 1) so sánh tỉ lệ quan sát được (từ mẫu) với tỉ lệ nền (kỳ vọng) tương ứng của cả hai kiểm định.
+
+```{r result_plot, echo=TRUE, fig.cap="Hình 1: So sánh Tỉ lệ Quan sát (Mẫu chơi game) với Tỉ lệ Kỳ vọng"}
+# Gộp kết quả n, x, baseline, sample_prop từ hai kiểm định
+all_results_summary <- data.frame(
+    Question_Label = c("Hành vi phạm pháp? (so với 10%)", "Tin game gây bạo lực? (so với 40%)"),
+    Sample_Proportion = c(x_behavior / n_behavior, x_belief / n_belief),
+    Baseline = c(0.10, 0.40)
+)
+
+# Chuẩn bị dữ liệu cho biểu đồ tổng hợp
+plot_data_final <- all_results_summary %>%
+  pivot_longer(
+    cols = c(Sample_Proportion, Baseline),
+    names_to = "Loai_TyLe",
+    values_to = "GiaTri_TyLe"
+  ) %>%
+  # Tạo nhãn phân loại
+  mutate(Loai_TyLe_Label = fct_recode(Loai_TyLe,
+                                     "Quan sát (Mẫu)" = "Sample_Proportion",
+                                     "Kỳ vọng (Nền)" = "Baseline"
+                                     ))
+
+# Vẽ biểu đồ so sánh
+ggplot(plot_data_final, aes(x = Question_Label, y = GiaTri_TyLe, fill = Loai_TyLe_Label)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(aes(label = percent(GiaTri_TyLe, accuracy = 0.1)),
+            position = position_dodge(width = 0.8),
+            vjust = -0.5, size = 4, fontface = "bold") +
+
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  scale_fill_manual(values = c("Kỳ vọng (Nền)" = "#F8766D", "Quan sát (Mẫu)" = "#00BFC4")) +
+  labs(
+    title = "So sánh Tỉ lệ Quan sát và Tỉ lệ Kỳ vọng",
+    subtitle = "Phân tích 2 câu hỏi trên nhóm chơi game bạo lực",
+    x = "Câu hỏi khảo sát",
+    y = "Tỉ lệ (%)",
+    fill = "Loại Tỉ lệ"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top")
+```
+
+## 4.2. Diễn giải Phân tích
+
+Sau khi cả hai phép kiểm định đều xác nhận có sự bất thường thống kê (P-value < 0.05), chúng ta cần diễn giải ý nghĩa của chúng. Cần nhấn mạnh rằng **mối liên hệ (correlation)** không đồng nghĩa với **quan hệ nhân quả (causation)**.
+
+1.  **Diễn giải Phát hiện 1 (Hành vi Phạm pháp):**
+    * Kết quả chỉ xác nhận một **mối liên hệ** giữa việc chơi game bạo lực và hành vi phạm pháp trong mẫu này.
+    * *Lập luận phản biện (Thiên kiến Lựa chọn - Selection Bias):* Có thể những cá nhân *vốn đã có* xu hướng bốc đồng/phạm pháp sẽ *chủ động tìm đến* game bạo lực, chứ không phải game *gây ra* hành vi đó.
+
+2.  **Diễn giải Phát hiện 2 (Niềm tin):**
+    * Phát hiện này đặc biệt thú vị: nhóm chơi game bạo lực lại có tỉ lệ *tin* vào tác động tiêu cực của game (67.5%) cao hơn dân số chung (40%).
+    * *Lập luận phản biện (Nghịch lý Nhận thức):* Thay vì chứng minh game *gây ra* hành vi, kết quả này có thể phản ánh:
+        * **Sự hợp lý hóa (Rationalization):** Người chơi dùng "tác động của game" để giải thích hành vi của mình.
+        * **Sự tuân thủ xã hội (Social Desirability):** Người chơi lặp lại quan điểm phổ biến từ truyền thông.
+        * **Sự nhạy cảm tăng cao (Heightened Sensitivity):** Người chơi nhạy cảm hơn với các tranh luận về game.
+
+**Kết luận tổng hợp:** Phân tích này xác nhận rằng nhóm người chơi game bạo lực trong mẫu khảo sát có tỉ lệ hành vi phạm pháp và niềm tin về tác động của game cao hơn mức nền kỳ vọng.
+
+Tuy nhiên, các phát hiện này, đặc biệt là phát hiện về niềm tin, **không đủ để kết luận quan hệ nhân quả**, mà gợi ý các giải thích tâm lý xã hội phức tạp hơn (như thiên kiến lựa chọn, sự hợp lý hóa, hoặc sự nhạy cảm tăng cao).
+
+---
+
+# 5. Tài liệu tham khảo
+
+1.  **Bộ dữ liệu (Kaggle):**
+    * Shamoel, M. (2022). *Effects of Video Games on Aggression (msdos.csv)*. Kaggle. Lấy từ: <https://www.kaggle.com/datasets/muhammadshamoeel/effects-of-video-games-on-aggression-msdos-csv>
+
+2.  **Phần mềm & Thư viện:**
+    * R Core Team (2025). *R: A language and environment for statistical computing*. R Foundation for statistical Computing, Vienna, Austria. <https://www.R-project.org/>
+    * Wickham, H. et al. (2019). Welcome to the tidyverse. *Journal of Open Source Software*, 4(43), 1686. <https://doi.org/10.21105/joss.01686>
+3.  **Sách và báo cáo:**
+    * N. V. Tuấn, Phân tích dữ liệu với R. T.P. Hồ Chí Minh: Nhà Xuất Bản Tổng Hợp Thành Phố Hồ Chí Minh, 2014.
+    * American Psychological Association (APA) Task Force on Violent Media (2015). Technical Report on the Review of the Violent Video Game Literature. Lấy từ: https://www.apa.org/pi/families/review-video-games.pdf
+    * Agresti, A. (2013). Categorical Data Analysis (3rd ed.). Wiley. (Chương về kiểm định tỉ lệ, bao gồm kiểm định nhị thức chính xác).
+4.  **Khảo sat:**
+    * Pew Research Center (2015). Gaming and Gamers. Lấy từ: https://www.pewresearch.org/internet/2015/12/15/gaming-and-gamers/ 
+5.  **Bài báo khoa học (tham khảo):**
+    *Przybylski, A. K., & Weinstein, N. (2019). Violent video game engagement is not associated with adolescents' aggressive behaviour: evidence from a registered report. Royal Society Open Science, 6(2), 171474. https://doi.org/10.1098/rsos.171474 (Một nghiên cứu quan trọng về chủ đề game và bạo lực).
