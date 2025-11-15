@@ -50,7 +50,7 @@ public class BookN {
     // Phương thức toString()
     @Override
     public String toString() {
-        // Xây dựng chuỗi cho mảng tác giả theo định dạng {Author[...], Author[...]}
+        // Xây dựng chuỗi cho mảng tác giả
         String authorsString = "{";
         for (int i = 0; i < authors.length; i++) {
             authorsString += authors[i].toString();
@@ -63,8 +63,8 @@ public class BookN {
         return "Book[name=" + name + ", authors=" + authorsString + ", price=" + price + ", qty=" + qty + "]";
     }
 
-    // Phương thức bổ sung từ sơ đồ
-    public String getAuthorNames() {
+    // Phương thức bổ sung 
+        public String getAuthorNames() {
         String names = "";
         for (int i = 0; i < authors.length; i++) {
             names += authors[i].getName();
