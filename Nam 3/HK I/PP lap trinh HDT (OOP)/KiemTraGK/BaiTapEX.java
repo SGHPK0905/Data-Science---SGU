@@ -1,23 +1,16 @@
 package KiemTraGK;
-// Ngôn ngữ: Java
-// Tên file: GiaiBaiTapThem.java
 
-// 1. IMPORT TẤT CẢ Ở ĐẦU FILE
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import java.awt.*;
 
 // 2. LỚP CHÍNH (PUBLIC)
-/**
- * Lớp Main chính để giải các bài toán thêm (Câu 3-8).
- * Đây là lớp PUBLIC duy nhất trong file này.
- */
 public class BaiTapEX {
 
     public static void main(String[] args) {
         
-        // ---- Khởi tạo dữ liệu mẫu (cho Câu 3, 4, 5, 6) ----
+      
         // Tạo một đa giác 5 cạnh (ngũ giác)
         PolyLine myPolygon = new PolyLine();
         myPolygon.appendPoint(1, 1);
@@ -142,13 +135,6 @@ public class BaiTapEX {
 }
 
 
-// 3. CÁC LỚP CÒN LẠI (ĐÃ BỎ "PUBLIC")
-
-// ---- LỚP POINT ----
-/**
- * Lớp Point (từ Câu 1) [nguồn: 6]
- * (Đã bỏ public)
- */
 class Point {
     private double x;
     private double y;
@@ -174,11 +160,7 @@ class Point {
     }
 }
 
-// ---- LỚP POLYLINE ----
-/**
- * Lớp PolyLine (từ Câu 1) [nguồn: 7]
- * (Đã bỏ public)
- */
+
 class PolyLine {
     private List<Point> points;
 

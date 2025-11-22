@@ -8,14 +8,15 @@ public class Main {
 
     public static void main(String[] args) {
         
-        System.out.println("--- 🚀 Bắt đầu kiểm tra PolyLine ---");
+        System.out.println("--- Kiểm tra đa giác ---");
 
         PolyLine rectangle = new PolyLine();
 
- 
+
         rectangle.appendPoint(0, 0);
         rectangle.appendPoint(5, 0);
         Point p3 = new Point(5, 4);
+        rectangle.appendPoint(p3);
         Point p4 = new Point(0, 4);
         rectangle.appendPoint(p4);   
 
@@ -26,7 +27,7 @@ public class Main {
 
         System.out.println("Diện tích (đa giác kín): " + rectangle.getArea());
 
-        System.out.println("\n--- 🧪 Kiểm tra trường hợp đặc biệt (ít điểm) ---");
+        System.out.println("\n--- Kiểm tra trường hợp đặc biệt (ít điểm) ---");
         
 
         PolyLine line = new PolyLine();
@@ -37,5 +38,13 @@ public class Main {
         System.out.println("Độ dài (hở): " + line.getLength());    
         System.out.println("Chu vi (kín): " + line.getPerimeter()); 
         System.out.println("Diện tích (kín): " + line.getArea());  
+       
+        Point removedPoint = rectangle.findMaxAreaByRemovingVertex();
+        if (removedPoint != null) {
+            System.out.println("Đỉnh cần bỏ để diện tích lớn nhất là: " + removedPoint);
+        } else {
+            System.out.println("Không thể bỏ đỉnh (đa giác không đủ đỉnh).");
+
+        }
     }
 }

@@ -83,4 +83,28 @@ public class PolyLine {
         return Math.abs(area / 2.0);
     }
 
+    public Point findMaxAreaByRemovingVertex() {
+        int n = points.size();
+        if (n <= 3) return null; 
+
+        double maxArea = 0;
+        Point pointToRemove = null;
+
+        for (int i = 0; i < n; i++) {
+            List<Point> tempPoints = new ArrayList<>();
+            for (int j = 0; j < n; j++) {
+                if (i == j) continue;
+                tempPoints.add(points.get(j));
+            }
+
+            PolyLine tempPolygon = new PolyLine(tempPoints);
+            double currentArea = tempPolygon.getArea();
+
+            if (currentArea > maxArea) {
+                maxArea = currentArea;
+                pointToRemove = points.get(i);
+            }
+        }
+        return pointToRemove;
+    }
 }
