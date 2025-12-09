@@ -29,7 +29,6 @@ TREE = [
     "        ###        "
 ]
 
-# Lyrics
 LYRICS = [
     "We wish you a Merry Christmas",
     "We wish you a Merry Christmas",
