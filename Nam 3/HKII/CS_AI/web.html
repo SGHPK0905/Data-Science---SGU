@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MISOA - Tối ưu hóa Định tuyến Thông minh</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#020617',    // slate-950
+                            card: '#0f172a',    // slate-900
+                            cyan: '#06b6d4',    // cyan-500
+                            cyanLight: '#22d3ee', // cyan-400
+                            blue: '#3b82f6',    // blue-500
+                            orange: '#f97316',  // orange-500
+                            success: '#10b981'  // emerald-500
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion@10.12.16/dist/framer-motion.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #020617;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+        .glow-text {
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { motion, useAnimation, useInView } = window.Motion;
+
+        // --- Helper: Fade In Component ---
+        const FadeInSection = ({ children, delay = 0, className = "" }) => {
+            const ref = useRef(null);
+            const isInView = useInView(ref, { once: true, margin: "-100px" });
+            const controls = useAnimation();
+
+            useEffect(() => {
+                if (isInView) {
+                    controls.start("visible");
+                }
+            }, [isInView, controls]);
+
+            return (
+                <motion.div
+                    ref={ref}
+                    initial="hidden"
+                    animate={controls}
+                    variants={{
+                        hidden: { opacity: 0, y: 30 },
+                        visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: delay } }
+                    }}
+                    className={className}
+                >
+                    {children}
+                </motion.div>
+            );
+        };
+
+        // --- 1. Hero Section ---
+        const HeroSection = () => (
+            <section className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
+                {/* Background effects */}
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-cyan/10 rounded-full blur-[100px] animate-pulse-slow"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-blue/10 rounded-full blur-[100px] animate-pulse-slow" style={{animationDelay: '1s'}}></div>
+                
+                <div className="relative z-10 max-w-5xl mx-auto w-full">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="h-[1px] w-12 bg-brand-cyan"></div>
+                            <span className="text-brand-cyan font-mono text-sm tracking-widest uppercase">Đại học Sài Gòn | Năm 2026</span>
+                        </div>
+                        
+                        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+                            Thuật toán Đàn mòng biển <br/>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-cyan to-brand-blue glow-text">
+                                Đa chiến lược (MISOA)
+                            </span>
+                        </h1>
+                        
+                        <p className="text-xl text-slate-400 mb-12 max-w-2xl leading-relaxed">
+                            Giải pháp Metaheuristic thông minh nhằm giải quyết bài toán NP-Hard trong định tuyến chuỗi cung ứng (TSP/VRP).
+                        </p>
+
+                        <div className="glass-panel p-6 rounded-xl inline-block">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                <div>
+                                    <p className="text-slate-500 text-sm mb-2 font-mono">/ Nhóm nghiên cứu /</p>
+                                    <ul className="text-slate-200 font-medium space-y-1">
+                                        <li>1. Nguyễn Trương Cao Sơn</li>
+                                        <li>2. Phan Đồng Minh Quân</li>
+                                        <li>3. Võ Minh Tiến</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <p className="text-slate-500 text-sm mb-2 font-mono">/ Giảng viên hướng dẫn /</p>
+                                    <p className="text-brand-cyanLight font-bold">ThS. Huỳnh Minh Trí</p>
+                                    <p className="text-slate-400 text-sm mt-1">Cơ sở Trí tuệ Nhân tạo</p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+        );
+
+        // --- 2. Problem Section ---
+        const ProblemSection = () => (
+            <section className="py-24 px-6 border-t border-slate-800/50 relative">
+                <div className="max-w-6xl mx-auto">
+                    <FadeInSection>
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Thách thức Định tuyến Chuỗi cung ứng</h2>
+                        <p className="text-slate-400 mb-12 max-w-2xl">Tại sao các giải thuật toán học truyền thống hoàn toàn thất bại trước các bài toán Logistics 4.0?</p>
+                    </FadeInSection>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <FadeInSection delay={0.1}>
+                            <div className="glass-panel p-8 rounded-2xl h-full border-t-4 border-t-brand-orange">
+                                <i data-lucide="truck" className="w-10 h-10 text-brand-orange mb-6"></i>
+                                <h3 className="text-xl font-bold text-white mb-3">Áp lực Logistics 4.0</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">
+                                    Thương mại điện tử bùng nổ yêu cầu tối ưu hóa lộ trình khắt khe để tiết kiệm chi phí và thời gian giao hàng. Mạng lưới phân phối ngày càng phức tạp.
+                                </p>
+                            </div>
+                        </FadeInSection>
+                        <FadeInSection delay={0.2}>
+                            <div className="glass-panel p-8 rounded-2xl h-full border-t-4 border-t-brand-alert">
+                                <i data-lucide="calculator" className="w-10 h-10 text-red-500 mb-6"></i>
+                                <h3 className="text-xl font-bold text-white mb-3">Điểm nghẽn Toán học</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">
+                                    Độ phức tạp <strong className="text-red-400">NP-Hard</strong>. Giải thuật chính xác (Exact Algorithms) cạn kiệt tài nguyên tính toán và sụp đổ khi quy mô dữ liệu N tăng lên.
+                                </p>
+                            </div>
+                        </FadeInSection>
+                        <FadeInSection delay={0.3}>
+                            <div className="glass-panel p-8 rounded-2xl h-full border-t-4 border-t-brand-cyan">
+                                <i data-lucide="lightbulb" className="w-10 h-10 text-brand-cyan mb-6"></i>
+                                <h3 className="text-xl font-bold text-white mb-3">Sự dịch chuyển tất yếu</h3>
+                                <p className="text-slate-400 text-sm leading-relaxed">
+                                    Các thuật toán Siêu cảm hứng (Metaheuristic) trở thành lời giải bắt buộc, giúp tìm nghiệm xấp xỉ tối ưu trong thời gian thực tế tính bằng giây.
+                                </p>
+                            </div>
+                        </FadeInSection>
+                    </div>
+                </div>
+            </section>
+        );
+
+        // --- 3. Strategies Section (The Core of MISOA) ---
+        const StrategiesSection = () => (
+            <section className="py-24 px-6 relative bg-slate-900/30">
+                <div className="max-w-6xl mx-auto">
+                    <FadeInSection>
+                        <div className="flex items-center gap-3 mb-4">
+                            <i data-lucide="cpu" className="w-6 h-6 text-brand-cyan"></i>
+                            <span className="text-brand-cyan font-mono uppercase tracking-wider text-sm">Kiến trúc thuật toán</span>
+                        </div>
+                        <h2 className="text-3xl md:text-5xl font-bold mb-16">3 Chiến Lược Nâng Cấp (MISOA)</h2>
+                    </FadeInSection>
+
+                    <div className="space-y-12">
+                        {/* Strategy 1 */}
+                        <FadeInSection delay={0.1}>
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center glass-panel p-8 rounded-2xl border-l-4 border-l-brand-cyan hover:bg-slate-800/50 transition-colors">
+                                <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-slate-950/50 rounded-xl border border-slate-800">
+                                    <i data-lucide="tornado" className="w-12 h-12 text-brand-cyan mb-4 animate-float"></i>
+                                    <h3 className="text-2xl font-bold text-center">Khởi tạo Hỗn mang</h3>
+                                    <span className="text-brand-cyanLight font-mono text-sm mt-2">Chaotic Logistic Map</span>
+                                </div>
+                                <div className="lg:col-span-8">
+                                    <p className="text-slate-300 mb-6 text-lg">
+                                        Thay thế hàm random cơ bản bằng phương trình Logistic. Giúp bầy mòng biển phân tán cực kỳ đều khắp không gian tìm kiếm, phá vỡ tính đơn điệu ban đầu.
+                                    </p>
+                                    <div className="bg-slate-950 p-4 rounded-lg font-mono text-sm text-brand-cyanLight border border-slate-800">
+                                        <span className="text-slate-500">// Phương trình hỗn mang Logistic</span><br/>
+                                        x_&#123;n+1&#125; = a * x_n * (1 - x_n)
+                                    </div>
+                                </div>
+                            </div>
+                        </FadeInSection>
+
+                        {/* Strategy 2 */}
+                        <FadeInSection delay={0.2}>
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center glass-panel p-8 rounded-2xl border-l-4 border-l-brand-blue hover:bg-slate-800/50 transition-colors">
+                                <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-slate-950/50 rounded-xl border border-slate-800">
+                                    <i data-lucide="trending-down" className="w-12 h-12 text-brand-blue mb-4 animate-float"></i>
+                                    <h3 className="text-2xl font-bold text-center">Kiểm soát Phi tuyến</h3>
+                                    <span className="text-blue-400 font-mono text-sm mt-2">Non-linear Parameter Fc</span>
+                                </div>
+                                <div className="lg:col-span-8">
+                                    <p className="text-slate-300 mb-6 text-lg">
+                                        SOA gốc sử dụng biến tuyến tính làm mất cân bằng giữa Khám phá và Khai thác. MISOA ép biến <code className="text-blue-400 bg-blue-900/30 px-1 rounded">Fc</code> giảm theo hàm bậc hai, giúp mòng biển hội tụ sâu hơn ở giai đoạn cuối.
+                                    </p>
+                                    <div className="bg-slate-950 p-4 rounded-lg font-mono text-sm text-blue-400 border border-slate-800">
+                                        Fc = 2 * (1 - Iteration / Max_Iteration)²
+                                    </div>
+                                </div>
+                            </div>
+                        </FadeInSection>
+
+                        {/* Strategy 3 */}
+                        <FadeInSection delay={0.3}>
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center glass-panel p-8 rounded-2xl border-l-4 border-l-brand-orange hover:bg-slate-800/50 transition-colors">
+                                <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-slate-950/50 rounded-xl border border-slate-800">
+                                    <i data-lucide="rocket" className="w-12 h-12 text-brand-orange mb-4 animate-float"></i>
+                                    <h3 className="text-2xl font-bold text-center">Bước nhảy Levy</h3>
+                                    <span className="text-orange-400 font-mono text-sm mt-2">Levy Flight Mutation</span>
+                                </div>
+                                <div className="lg:col-span-8">
+                                    <p className="text-slate-300 mb-6 text-lg">
+                                        Bí quyết thoát khỏi bẫy cực tiểu cục bộ (Local Minima). Sử dụng phân phối đuôi dài (heavy-tailed) cho phép cá thể thực hiện các bước nhảy xa đột biến cực kỳ hiệu quả.
+                                    </p>
+                                    <div className="bg-slate-950 p-4 rounded-lg font-mono text-sm text-orange-400 border border-slate-800">
+                                        <span className="text-slate-500">// Phân phối Levy với hệ số β</span><br/>
+                                        L(s) ~ |s|^(-1 - β) <br/>
+                                        <span className="text-slate-500">Step = u / |v|^(1/β)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </FadeInSection>
+                    </div>
+                </div>
+            </section>
+        );
+
+        // --- 4. Benchmark Section ---
+        const BenchmarkSection = () => (
+            <section className="py-24 px-6 border-t border-slate-800/50">
+                <div className="max-w-6xl mx-auto">
+                    <FadeInSection>
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Kết Quả Thực Nghiệm Benchmark</h2>
+                        <p className="text-slate-400 mb-12">Thống kê qua 30 lần chạy độc lập, 500 vòng lặp trên các hàm kiểm thử chuẩn quốc tế.</p>
+                    </FadeInSection>
+
+                    <FadeInSection delay={0.2}>
+                        <div className="glass-panel overflow-hidden rounded-2xl border border-slate-700">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm whitespace-nowrap">
+                                    <thead className="bg-slate-900 border-b border-slate-700 font-mono text-slate-400 uppercase">
+                                        <tr>
+                                            <th className="px-6 py-4">Hàm Toán Học</th>
+                                            <th className="px-6 py-4">Đặc điểm</th>
+                                            <th className="px-6 py-4">Mean (SOA Gốc)</th>
+                                            <th className="px-6 py-4 bg-brand-cyan/10 text-brand-cyan">Mean (MISOA)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800/50">
+                                        <tr className="hover:bg-slate-800/30">
+                                            <td className="px-6 py-4 font-bold text-white">F1 (Sphere)</td>
+                                            <td className="px-6 py-4 text-slate-400">Đơn cực trị</td>
+                                            <td className="px-6 py-4 font-mono text-slate-300">6.85e-12</td>
+                                            <td className="px-6 py-4 font-mono font-bold text-brand-cyan bg-brand-cyan/5">3.04e-18</td>
+                                        </tr>
+                                        <tr className="hover:bg-slate-800/30">
+                                            <td className="px-6 py-4 font-bold text-white">F2 (Schwefel)</td>
+                                            <td className="px-6 py-4 text-slate-400">Đơn cực trị</td>
+                                            <td className="px-6 py-4 font-mono text-slate-300">1.63e-08</td>
+                                            <td className="px-6 py-4 font-mono font-bold text-brand-cyan bg-brand-cyan/5">4.94e-12</td>
+                                        </tr>
+                                        <tr className="hover:bg-slate-800/30">
+                                            <td className="px-6 py-4 font-bold text-brand-orange">F9 (Rastrigin)</td>
+                                            <td className="px-6 py-4 text-brand-orange/80">Đa cực trị (Nhiều bẫy)</td>
+                                            <td className="px-6 py-4 font-mono text-slate-300">1.96e+00</td>
+                                            <td className="px-6 py-4 font-mono font-bold text-brand-success bg-brand-success/10">0.00e+00 (Chạm đáy)</td>
+                                        </tr>
+                                        <tr className="hover:bg-slate-800/30">
+                                            <td className="px-6 py-4 font-bold text-brand-orange">F10 (Ackley)</td>
+                                            <td className="px-6 py-4 text-brand-orange/80">Đa cực trị</td>
+                                            <td className="px-6 py-4 font-mono text-slate-300">4.79e-07</td>
+                                            <td className="px-6 py-4 font-mono font-bold text-brand-cyan bg-brand-cyan/5">3.85e-10</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </FadeInSection>
+                </div>
+            </section>
+        );
+
+        // --- 5. Application Section (ROV & TSP) ---
+        const ApplicationSection = () => (
+            <section className="py-24 px-6 relative bg-slate-900/50 border-t border-slate-800/50">
+                <div className="max-w-6xl mx-auto">
+                    <FadeInSection>
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Ứng Dụng: Bài Toán Người Giao Hàng (TSP)</h2>
+                        <p className="text-slate-400 mb-12">Làm thế nào MISOA giải quyết không gian rời rạc? Sử dụng kỹ thuật ROV (Rank Order Value).</p>
+                    </FadeInSection>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <FadeInSection delay={0.1}>
+                            <div className="glass-panel p-8 rounded-2xl border border-slate-700">
+                                <h3 className="text-xl font-bold mb-6 text-brand-cyan">Cơ chế chuyển đổi ROV</h3>
+                                
+                                <div className="space-y-6">
+                                    <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
+                                        <p className="text-xs text-slate-500 font-mono mb-2">1. Vector liên tục (MISOA Output)</p>
+                                        <div className="flex gap-2 font-mono text-sm justify-between">
+                                            <span className="bg-slate-800 px-3 py-1 rounded">[ 0.9 ]</span>
+                                            <span className="bg-slate-800 px-3 py-1 rounded">[-0.2 ]</span>
+                                            <span className="bg-slate-800 px-3 py-1 rounded">[ 0.5 ]</span>
+                                            <span className="bg-slate-800 px-3 py-1 rounded">[ 1.2 ]</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex justify-center text-slate-600">
+                                        <i data-lucide="arrow-down" className="w-6 h-6"></i>
+                                    </div>
+
+                                    <div className="bg-slate-950 p-4 rounded-lg border border-brand-cyan/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                                        <p className="text-xs text-brand-cyan font-mono mb-2">2. Vector thứ hạng (Route Permutation)</p>
+                                        <div className="flex gap-2 font-mono text-sm font-bold text-white justify-between">
+                                            <span className="bg-brand-cyan/20 border border-brand-cyan/50 px-3 py-1 rounded text-center w-full">Thành phố C (2)</span>
+                                            <span className="bg-brand-cyan/20 border border-brand-cyan/50 px-3 py-1 rounded text-center w-full">Thành phố A (1)</span>
+                                            <span className="bg-brand-cyan/20 border border-brand-cyan/50 px-3 py-1 rounded text-center w-full">Thành phố B (3)</span>
+                                            <span className="bg-brand-cyan/20 border border-brand-cyan/50 px-3 py-1 rounded text-center w-full">Thành phố D (4)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </FadeInSection>
+
+                        <FadeInSection delay={0.3}>
+                            <div className="glass-panel p-2 rounded-2xl border border-slate-700 bg-slate-800/30">
+                                {/* Mock UI for Streamlit App */}
+                                <div className="bg-slate-900 rounded-xl overflow-hidden border border-slate-700">
+                                    <div className="bg-slate-950 px-4 py-3 flex items-center gap-2 border-b border-slate-800">
+                                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                        <span className="ml-2 font-mono text-xs text-slate-500">MISOA_Dashboard • Streamlit</span>
+                                    </div>
+                                    <div className="p-6">
+                                        <h4 className="text-lg font-bold text-white mb-4">Kết quả Tối ưu Lộ trình</h4>
+                                        <div className="grid grid-cols-2 gap-4 mb-6">
+                                            <div className="bg-slate-950 border border-slate-800 p-4 rounded-lg">
+                                                <p className="text-slate-500 text-xs font-mono mb-1">Tổng quãng đường</p>
+                                                <p className="text-2xl font-bold text-brand-success">850.4 km</p>
+                                                <p className="text-brand-success/70 text-xs">↓ Giảm 120km so với SOA</p>
+                                            </div>
+                                            <div className="bg-slate-950 border border-slate-800 p-4 rounded-lg">
+                                                <p className="text-slate-500 text-xs font-mono mb-1">Chi phí tiết kiệm</p>
+                                                <p className="text-2xl font-bold text-brand-orange">230,000 VNĐ</p>
+                                                <p className="text-slate-500 text-xs">Ước tính nhiên liệu</p>
+                                            </div>
+                                        </div>
+                                        <div className="w-full h-32 bg-slate-950 border border-slate-800 rounded-lg flex items-center justify-center relative overflow-hidden">
+                                            <svg className="w-full h-full opacity-30" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                                <path d="M10,50 L30,20 L60,80 L90,30" stroke="#06b6d4" strokeWidth="2" fill="none" />
+                                                <circle cx="10" cy="50" r="3" fill="#fff"/>
+                                                <circle cx="30" cy="20" r="3" fill="#fff"/>
+                                                <circle cx="60" cy="80" r="3" fill="#fff"/>
+                                                <circle cx="90" cy="30" r="3" fill="#fff"/>
+                                            </svg>
+                                            <span className="absolute text-slate-400 font-mono text-sm">[Bản đồ mô phỏng lộ trình]</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </FadeInSection>
+                    </div>
+                </div>
+            </section>
+        );
+
+        // --- 6. NFL Theorem Section ---
+        const NFLSection = () => (
+            <section className="py-24 px-6 border-t border-slate-800/50">
+                <div className="max-w-4xl mx-auto text-center">
+                    <FadeInSection>
+                        <i data-lucide="scale" className="w-16 h-16 text-slate-500 mx-auto mb-6"></i>
+                        <h2 className="text-3xl font-bold mb-4">Sự Đánh Đổi: Định Lý NFL</h2>
+                        <p className="text-slate-400 font-mono text-sm mb-12">"No Free Lunch" Theorem in Metaheuristics</p>
+                        
+                        <div className="glass-panel p-8 rounded-2xl border border-brand-orange/30 text-left relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-brand-orange"></div>
+                            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i data-lucide="alert-triangle" className="text-brand-orange"></i>
+                                Xung đột cấu trúc giữa Levy Flight và ROV
+                            </h3>
+                            <p className="text-slate-300 leading-relaxed mb-4">
+                                Mặc dù <strong className="text-brand-cyan">Bước nhảy Levy</strong> là vũ khí tuyệt vời giúp MISOA phá kỷ lục trên không gian liên tục (Hàm F9), nhưng khi áp dụng vào không gian rời rạc qua bộ lọc ROV, những cú nhảy xa cực đoan lại vô tình phá vỡ cấu trúc chuỗi lộ trình đã được tối ưu cục bộ.
+                            </p>
+                            <p className="text-slate-400 italic text-sm">
+                                Kết luận khoa học: Không có thuật toán nào hoàn hảo cho mọi bài toán. Khả năng "Khám phá" cực đoan đôi khi làm hại khả năng "Khai thác" vi mô.
+                            </p>
+                        </div>
+                    </FadeInSection>
+                </div>
+            </section>
+        );
+
+        // --- Main App Component ---
+        const App = () => {
+            useEffect(() => {
+                lucide.createIcons();
+            }, []);
+
+            return (
+                <div className="font-sans">
+                    {/* Navigation simple */}
+                    <nav className="fixed top-0 w-full z-50 glass-panel border-b-0 border-slate-800/50 px-6 py-4">
+                        <div className="max-w-6xl mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <i data-lucide="route" className="text-brand-cyan"></i>
+                                <span className="font-bold tracking-tight text-white">MISOA Project</span>
+                            </div>
+                            <div className="hidden md:flex gap-6 text-sm font-medium text-slate-400">
+                                <span className="hover:text-white cursor-pointer transition">Thuật toán</span>
+                                <span className="hover:text-white cursor-pointer transition">Benchmark</span>
+                                <span className="hover:text-white cursor-pointer transition">Ứng dụng TSP</span>
+                            </div>
+                        </div>
+                    </nav>
+
+                    <HeroSection />
+                    <ProblemSection />
+                    <StrategiesSection />
+                    <BenchmarkSection />
+                    <ApplicationSection />
+                    <NFLSection />
+
+                    {/* Footer */}
+                    <footer className="py-12 text-center border-t border-slate-900 bg-[#020617]">
+                        <p className="text-slate-600 font-mono text-sm">© 2026 Đại học Sài Gòn - Lớp chuyên ngành Toán Ứng dụng.</p>
+                        <p className="text-slate-700 text-xs mt-2">Báo cáo Đồ án: Tính toán thông minh / Cơ sở Trí tuệ Nhân tạo</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+class Diagram
+    class HoaDon {
+        +maHoaDon: String
+        +soBan: int
+        +danhSachMonAn: Map~String, Integer~
+        +maNVOrder: String
+        +maNVThanhToan: String
+        +thoiGianXuat: DateTime
+        +tongTien: double
+        +trangThai: String
+    }
+
+    class QuanLyTiemPho {
+        -danhSachHoaDonLuuTru: List~HoaDon~
+        -danhSachBan: Map~Integer, HoaDon~
+        -menuGiaPho: Map~String, Double~
+        -menuGiaMonThem: Map~String, Double~
+        +ThongKeTinhTrangBan(): void
+        +NhapYeuCauGoiMon(soBan: int, ...): void
+        +InHoaDonTinhTien(soBan: int, ...): void
+        +HienThiCacHoaDonTrongNgay(): void
+    }
+
+    QuanLyTiemPho "1" o-- "*" HoaDon : quản lý
